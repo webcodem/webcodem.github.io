@@ -1,67 +1,51 @@
 const urls = {
   'url1': 'aHR0cHM6Ly93ZWJjb2RlbS5naXRodWIuaW8vd2ViY29kZW0tbWVkaWEuZ2l0aHViLmlvL3Jlc291cmNlcy9tYXJrZXRwbGFjZS9taW5lY3JhZnQvdGV4dHVyZS9BY3Rpb25zJTIwU3R1ZmYlMjAxLjMubWNwYWNr',
   'url2': 'aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL2RyaXZlL2ZvbGRlcnMvMVB1dkpKX21DTlBfUXVlRmJLYWV2WWtsQXg1OURZUzNXP3VzcD1zaGFyaW5n',
-  'url3': ['aHR0cHM6Ly93ZWJjb2RlbS5naXRodWIuaW8vd2ViY29kZW0tbWVkaWEuZ2l0aHViLmlvL3Jlc291cmNlcy9tYXJrZXRwbGFjZS9taW5lY3JhZnQvdGV4dHVyZS9SZWFsaXNtQ3JhZnQlMjBSZXNvdXJjZSUyMFBhY2subWNwYWNr', 'aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL2ZpbGUvZC8xdnRadnNQTzlfdk1vcTR1dFZ2Uy1rSloydDJxSkVEQi92aWV3P3VzcD1zaGFyaW5n'],
-  'url4': '',
-  'url5': 'aHR0cHM6Ly93ZWJjb2RlbS1tZWRpYS5naXRodWIuaW8vcmVzb3VyY2VzL21hcmtldHBsYWNlL21pbmVjcmFmdC90ZXh0dXJhL0JhcmUgQm9uZSBQbHVzIFtCRVRBXS5tY3BhY2s='
+  'url3': ['aHR0cHM6Ly9kcml2ZS51c2VyY29udGVudC5nb29nbGUuY29tL2Rvd25sb2FkP2lkPTF2dFp2c1BPOV92UXR1Vmt2Uy1rSloydDJxSk5hVDhCRCZleHBvcnQ9ZG93bmxvYWQmYXV0aHVzZXI9MCZjb25maXJtPXQmdXVpZD0zMzdmZGI3MS0zOGRmLTQ1NGEtOGRhNS1jZmExMzU2YTg2MGQmYXQ9QVBjbXBveU85RG5OMXB4ZG5ITmhYeDhoRkd5RiUzQTE3NDM5ODMyNDExNTY', 'aHR0cHM6Ly93ZWJjb2RlbS5naXRodWIuaW8vd2ViY29kZW0tbWVkaWEuZ2l0aHViLmlvL3Jlc291cmNlcy9tYXJrZXRwbGFjZS9taW5lY3JhZnQvdGV4dHVyZS9SZWFsaXNtQ3JhZnQlMjBSZXNvdXJjZSUyMFBhY2subWNwYWNr'],
+  'url43': '',
+  'url5': 'aHR0cHM6Ly93ZWJjb2RlbS1tZWRpYS5naXRodWIuaW8vcmVzb3VyY2VzL21hcmtldHBsYWNlL21pbmVjcmFmdC90ZXh0dXJhL0JhcmUgQm9uZSBQbHVzIFtCRVRBXS5tY3BhY2s',
 };
 
-// Updated function to handle both single URLs and arrays of URLs
+// Updated function to handle multiple URLs
 function decodeAndRedirect(event, urlKey) {
   event.preventDefault(); 
   
   const contentUrl = urls[urlKey];
   
-  // Check if it's an array (multiple files) or string (single file)
+  // Check if it's an array of URLs or a single URL
   if (Array.isArray(contentUrl)) {
-    // Handle multiple files with a small delay between downloads
+    // Process each URL in the array with a small delay between downloads
     contentUrl.forEach((url, index) => {
       setTimeout(() => {
-        const decodedUrl = atob(url);
-        
-        // Check if it's a Google Drive or another external link
-        if (decodedUrl.includes('drive.google.com') || 
-            decodedUrl.includes('dropbox.com') || 
-            decodedUrl.includes('mediafire.com')) {
-          // Open external links in new tab
-          window.open(decodedUrl, '_blank');
-        } else {
-          // Direct download for GitHub-hosted files
-          let filename = decodedUrl.split('/').pop();
-          filename = decodeURIComponent(filename);
-          
-          const link = document.createElement('a');
-          link.href = decodedUrl;
-          link.download = filename;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
-      }, index * 1500); // 1.5 second delay between downloads
+        downloadSingleFile(url);
+      }, index * 500); // 500ms delay between downloads to avoid browser blocking
     });
-  } else {
-    // Original behavior for single file
-    const decodedUrl = atob(contentUrl);
-    
-    // Check if it's a Google Drive or another external link
-    if (decodedUrl.includes('drive.google.com') || 
-        decodedUrl.includes('dropbox.com') || 
-        decodedUrl.includes('mediafire.com')) {
-      // Open external links in new tab
-      window.open(decodedUrl, '_blank');
-    } else {
-      // Direct download for GitHub-hosted files
-      let filename = decodedUrl.split('/').pop();
-      filename = decodeURIComponent(filename);
-      
-      const link = document.createElement('a');
-      link.href = decodedUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
+  } else if (contentUrl) {
+    // Process a single URL
+    downloadSingleFile(contentUrl);
   }
+}
+
+// Helper function to download a single file
+function downloadSingleFile(encodedUrl) {
+  // Fix encoded URL if it has an extra 'a' at the beginning (as seen in url3)
+  if (encodedUrl.startsWith('a') && encodedUrl.length % 4 === 1) {
+    encodedUrl = encodedUrl.substring(1);
+  }
+  
+  const decodedUrl = atob(encodedUrl);
+  
+  // Get filename from URL and decode URL-encoded characters
+  let filename = decodedUrl.split('/').pop();
+  filename = decodeURIComponent(filename); // This converts %20 to spaces and handles other URL-encoded characters
+  
+  // Create a hidden anchor and trigger download with the decoded filename
+  const link = document.createElement('a');
+  link.href = decodedUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 // Keep the original function for backward compatibility
@@ -74,7 +58,5 @@ function closePopup() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  if (document.getElementById('overlay')) {
-    document.getElementById('overlay').style.display = 'none';
-  }
+  document.getElementById('overlay').style.display = 'none';
 });
