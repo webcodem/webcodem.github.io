@@ -6,39 +6,17 @@ const urls = {
   'url5': 'aHR0cHM6Ly93ZWJjb2RlbS1tZWRpYS5naXRodWIuaW8vcmVzb3VyY2VzL21hcmtldHBsYWNlL21pbmVjcmFmdC90ZXh0dXJhL0JhcmUgQm9uZSBQbHVzIFtCRVRBXS5tY3BhY2s',
 };
 
-// Updated function to handle multiple URLs
+// Updated function to fix URL encoding in filename
 function decodeAndRedirect(event, urlKey) {
   event.preventDefault(); 
-  
-  const contentUrl = urls[urlKey];
-  
-  // Check if it's an array of URLs or a single URL
-  if (Array.isArray(contentUrl)) {
-    // Process each URL in the array with a small delay between downloads
-    contentUrl.forEach((url, index) => {
-      setTimeout(() => {
-        downloadSingleFile(url);
-      }, index * 500); // 500ms delay between downloads to avoid browser blocking
-    });
-  } else if (contentUrl) {
-    // Process a single URL
-    downloadSingleFile(contentUrl);
-  }
-}
 
-// Helper function to download a single file
-function downloadSingleFile(encodedUrl) {
-  // Fix encoded URL if it has an extra 'a' at the beginning (as seen in url3)
-  if (encodedUrl.startsWith('a') && encodedUrl.length % 4 === 1) {
-    encodedUrl = encodedUrl.substring(1);
-  }
-  
-  const decodedUrl = atob(encodedUrl);
-  
+  const contentUrl = urls[urlKey];
+  const decodedUrl = atob(contentUrl);
+
   // Get filename from URL and decode URL-encoded characters
   let filename = decodedUrl.split('/').pop();
   filename = decodeURIComponent(filename); // This converts %20 to spaces and handles other URL-encoded characters
-  
+
   // Create a hidden anchor and trigger download with the decoded filename
   const link = document.createElement('a');
   link.href = decodedUrl;
